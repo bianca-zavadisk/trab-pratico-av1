@@ -1,0 +1,85 @@
+:root {
+    --bg: #f3f4f6;
+    --surface: #ffffff;
+    --border: #e5e7eb;
+    --primary: #2563eb;
+    --text: #1f2937;
+    --code-bg: #1e1e1e;
+    --code-text: #d4d4d4;
+}
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    padding: 1rem;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    max-width: 1400px;
+    width: 100%;
+}
+
+.panel {
+    background: var(--surface);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+h2 { margin-top: 0; font-size: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+
+h3 { font-size: 1rem; color: #4b5563; margin-bottom: 0.5rem; }
+
+.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+
+.control-group { display: flex; flex-direction: column; gap: 0.25rem; }
+
+label { font-weight: 500; font-size: 0.85rem; }
+
+input[type="range"] { width: 100%; }
+
+button {
+    grid-column: 1 / -1; background-color: var(--primary); color: white; border: none;
+    padding: 0.75rem; border-radius: 6px; font-weight: 600; cursor: pointer;
+}
+
+button:disabled { background-color: #9ca3af; cursor: not-allowed; }
+
+canvas { border-radius: 8px; border: 1px solid var(--border); background: var(--surface); width: 100%; margin-bottom: 1rem;}
+
+.math-block { margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #cbd5e1; }
+
+pre {
+    background: var(--code-bg); color: var(--code-text); padding: 1rem;
+    border-radius: 8px; overflow-x: auto; font-size: 0.85rem; line-height: 1.4;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.keyword { color: #569cd6; }
+
+.function { color: #dcdcaa; }
+
+.variable { color: #9cdcfe; }
+
+.number { color: #b5cea8; }
+
+.comment { color: #6a9955; }
+
+.log-container {
+    background: #f1f5f9; padding: 1rem; border-radius: 8px;
+    height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.85rem;
+    border: 1px solid var(--border);
+}
+
+.log-entry { padding: 4px 0; border-bottom: 1px dashed #cbd5e1; }
+
+.log-entry:last-child { border-bottom: none; }
+
+.highlight { background-color: rgba(37, 99, 235, 0.1); border-left: 3px solid var(--primary); padding-left: 5px;}
