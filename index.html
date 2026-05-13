@@ -1,96 +1,74 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colorgorical - Visualizador de Algoritmo</title>
+    <title>Colorgorical - Análise Detalhada</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
-
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ]
+    });"></script>
+    
     <link rel="stylesheet" href="style.css">
+    
+    <script defer src="script.js"></script>
 </head>
 <body>
 
-<div class="container">
-    <div class="panel">
-        <h2>Interface de Amostragem (Canvas)</h2>
-        
+<div class="grid">
+    <div class="card">
+        <h2>Interface Colorgorical</h2>
         <div class="controls">
-            <div class="control-group">
-                <label>Número de Cores: <span id="valColors">5</span></label>
-                <input type="range" id="numColors" min="2" max="10" value="5">
+            <div class="group">
+                <label>Número de Cores: <span id="vN">5</span></label>
+                <input type="range" id="n" min="2" max="15" value="5">
             </div>
-            <div class="control-group">
-                <label>Velocidade (ms): <span id="valSpeed">600</span></label>
-                <input type="range" id="animSpeed" min="100" max="1500" value="600" step="100">
+            <div class="group">
+                <label>Peso Distância ($w_{dist}$): <span id="vD">50</span>%</label>
+                <input type="range" id="wDist" min="0" max="100" value="50">
             </div>
-            <div class="control-group">
-                <label>Peso - Distância Perceptual (<span id="valDist">70</span>%)</label>
-                <input type="range" id="wDist" min="0" max="100" value="70">
+            <div class="group">
+                <label>Peso Preferência ($w_{pref}$): <span id="vP">50</span>%</label>
+                <input type="range" id="wPref" min="0" max="100" value="50">
             </div>
-            <div class="control-group">
-                <label>Peso - Preferência Estética (<span id="valPref">30</span>%)</label>
-                <input type="range" id="wPref" min="0" max="100" value="30">
-            </div>
-            <button id="generateBtn">Iniciar Amostragem Iterativa</button>
+            <button id="runBtn">Gerar Paleta Iterativa</button>
         </div>
-
-        <h3>Espaço CIELAB (Eixos a* e b*)</h3>
-        <canvas id="spaceCanvas" width="600" height="350"></canvas>
         
-        <h3>Paleta Atual</h3>
-        <canvas id="paletteCanvas" width="600" height="100"></canvas>
+        <canvas id="spaceCanvas" width="600" height="350"></canvas>
+        <canvas id="paletteCanvas" width="600" height="80"></canvas>
     </div>
 
-    <div class="panel">
-        <h2>Fundamentação Teórica e Execução</h2>
+    <div class="card">
+        <h2>Processo: Adicionar à Paleta (Step 3)</h2>
         
-        <div class="math-block">
-            <h3>Função Objetivo (Minimização de Penalidades)</h3>
-            <p>O algoritmo atribui uma pontuação $S(c)$ para cada cor candidata $c$, baseada no mínimo das distâncias e preferências em relação às cores $p$ já presentes na paleta $P$:</p>
-            <div>
-                $$ S(c) = w_{dist} \cdot \min_{p \in P} (\Delta E(c, p)) + w_{pref} \cdot \min_{p \in P} (\text{Pref}(c, p)) $$
-            </div>
-            <p>Onde $\Delta E$ é a distância Euclidiana e a Preferência é aproximada por:</p>
-            <div>
-                $$ \text{Pref}(c, p) = 47.61 \cdot |\Delta L| - 46.42 \cdot \Delta \text{Hue} $$
-            </div>
+        <div class="explanation-box">
+            <p>Para adicionar uma nova cor, o modelo calcula as pontuações para todas as cores restantes usando uma soma ponderada. Esta função soma cada uma das pontuações mínimas da paleta com pesos definidos pelo utilizador, dadas todas as pontuações possíveis entre uma potencial nova cor ($c$) e as cores já escolhidas ($P$).</p>
+            <p>O modelo utiliza pontuações mínimas assumindo que uma paleta é apenas tão distinguível ou preferível quanto a sua pontuação mais baixa.</p>
+            <p>Existe também um termo de penalidade dependente do matiz ($\tau$) para reduzir a probabilidade de amostragem de uma cor que faça fronteira com a região amarela escura. A nova cor é então amostrada aleatoriamente de cores que caem acima de um limiar de pontuação ($Threshold$). Cores não distinguíveis são removidas após a amostragem.</p>
         </div>
 
-        <div class="code-block">
-            <h3>Código em Execução (JavaScript)</h3>
-<pre><span class="keyword">function</span> <span class="function">calculateScores</span>(<span class="variable">cand</span>, <span class="variable">palette</span>, <span class="variable">wDist</span>, <span class="variable">wPref</span>) {
-    <span class="keyword">let</span> <span class="variable">minDist</span> = <span class="number">Infinity</span>, <span class="variable">minPref</span> = <span class="number">Infinity</span>;
-
-    <span class="keyword">for</span> (<span class="keyword">const</span> <span class="variable">p</span> <span class="keyword">of</span> <span class="variable">palette</span>) {
-        <span class="comment">// 1. Distância Euclidiana em LAB</span>
-        <span class="keyword">const</span> <span class="variable">dl</span> = cand.lab.l - p.lab.l;
-        <span class="keyword">const</span> <span class="variable">da</span> = cand.lab.a - p.lab.a;
-        <span class="keyword">const</span> <span class="variable">db</span> = cand.lab.b - p.lab.b;
-        <span class="keyword">const</span> <span class="variable">dist</span> = Math.<span class="function">sqrt</span>(dl*dl + da*da + db*db);
-
-        <span class="comment">// 2. Preferência de Par (Lightness & Hue)</span>
-        <span class="keyword">const</span> <span class="variable">dhue</span> = Math.<span class="function">abs</span>(cand.hue - p.hue);
-        <span class="keyword">const</span> <span class="variable">pref</span> = (<span class="number">47.61</span> * Math.<span class="function">abs</span>(dl)) - (<span class="number">46.42</span> * dhue);
-
-        <span class="keyword">if</span> (dist &lt; minDist) minDist = dist;
-        <span class="keyword">if</span> (pref &lt; minPref) minPref = pref;
-    }
-
-    <span class="keyword">const</span> <span class="variable">finalScore</span> = (wDist * minDist) + (wPref * minPref);
-    <span class="keyword">return</span> { <span class="variable">finalScore</span>, <span class="variable">minDist</span>, <span class="variable">minPref</span> };
-}</pre>
+        <div class="math">
+            $$ score(c,P) = \tau \cdot (w_{dist} \cdot \min_{p \in P} \Psi_{dist} + w_{pref} \cdot \min_{p \in P} \Psi_{pref}) $$
+            <br>
+            $$ \tau = \begin{cases} 
+            0.75, & \text{if } 115^\circ < h < 138^\circ \land L \le 45 \\ 
+            0.80, & \text{if } 70^\circ \le h \le 115^\circ \land 45 < L \le 75 \\ 
+            0.85, & \text{if } 70^\circ \le h \le 115^\circ \land L > 75 \\ 
+            1, & \text{otherwise} 
+            \end{cases} $$
         </div>
 
-        <h3>Log de Iteração</h3>
-        <div class="log-container" id="executionLog">
-            <div class="log-entry">Aguardando início...</div>
-        </div>
+        <h3>Log de Execução Iterativa</h3>
+        <div id="log">Aguardando início...</div>
     </div>
 </div>
 
-<script src="script.js"></script>
 </body>
 </html>
