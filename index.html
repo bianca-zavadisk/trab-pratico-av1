@@ -3,26 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colorgorical - Análise Detalhada</title>
+    <title>Colorgorical & D3.js</title>
     
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
-        delimiters: [
-            {left: '$$', right: '$$', display: true},
-            {left: '$', right: '$', display: false},
-            {left: '\\(', right: '\\)', display: false},
-            {left: '\\[', right: '\\]', display: true}
-        ]
-    });"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}, {left: '\\[', right: '\\]', display: true} ] });"></script>
+    
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     
     <link rel="stylesheet" href="style.css">
-    
     <script defer src="script.js"></script>
+    
+    <script defer src="streamgraph.js"></script>
+    <script defer src="contours.js"></script>
 </head>
 <body>
 
 <div class="grid">
+    <div class="process-timeline full-width">
+        
+        <div class="step-card">
+            <div class="step-indicator">
+                <div class="step-number">1</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-content">
+                <h2>Inicialização</h2>
+                <div class="explanation-box">
+                    <p>A inicialização carrega o espaço de cores CIELAB. Para garantir que a ferramenta seja rápida e interativa, o algoritmo utiliza uma amostragem inicial mais espaçada, evitando o processamento excessivo ao pré-calcular as preferências de pares.</p>
+                    <p>O modelo restringe os candidatos às cores altamente preferíveis usando um limiar estatístico baseado no desvio padrão ($SD$), removendo opções com pontuações muito baixas.</p>
+                    <p>Por fim, estabelece-se a regra de diferença perceptível de Stone et al.: para as cores serem distinguíveis, a distância entre elas deve superar valores específicos em pelo menos um dos três eixos CIELAB.</p>
+                </div>
+                <div class="math">
+                    $$ threshold(c) = \Phi_c > \max(\Phi) - 0.75 \cdot SD(\Phi) $$
+                    <br>
+                    $$ \text{Filtro: } \Delta L < 22.747 \land \Delta a < 31.427 \land \Delta b < 44.757 $$
+                </div>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-indicator">
+                <div class="step-number">2</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-content">
+                <h2>Iniciar Paleta</h2>
+                <div class="explanation-box">
+                    <p>A primeira cor da paleta é selecionada ao sortear aleatoriamente uma "semente" a partir do subconjunto de cores que sobreviveram aos filtros da inicialização.</p>
+                    <p>Caso o utilizador forneça a sua própria cor inicial explicitamente, a etapa de sorteio é ignorada e essa cor torna-se o ponto de partida absoluto.</p>
+                    <p>Após a definição da primeira cor ($P_1$), o algoritmo varre o espaço disponível e elimina todas as cores vizinhas consideradas indistinguíveis em relação à semente.</p>
+                </div>
+                <div class="math">
+                    $$ P_1 = \begin{cases} seed_{user}, & \text{se fornecida} \\ c \sim \mathcal{U}(C_{threshold}), & \text{sorteio aleatório} \end{cases} $$
+                </div>
+            </div>
+        </div>
+
+        <div class="step-card">
+            <div class="step-indicator">
+                <div class="step-number">3</div>
+                </div>
+            <div class="step-content">
+                <h2>Adicionar à Paleta</h2>
+                <div class="explanation-box">
+                    <p>Para adicionar uma nova cor, o algoritmo avalia os candidatos calculando a sua pontuação mínima com as cores já presentes na paleta, com base nos pesos definidos pelo usuário.</p>
+                    <p>Após aplicar uma penalização para evitar tons amarelo-escuros, a nova cor é sorteada aleatoriamente entre as opções com melhor pontuação (acima de um limiar).</p>
+                    <p>Por fim, as opções muito semelhantes à cor escolhida são descartadas para manter o contraste visual.</p>
+                </div>
+                <div class="math">
+                    $$ score(c,P) = \tau \cdot (w_{dist} \cdot \min_{p \in P} \Psi_{dist} + w_{pref} \cdot \min_{p \in P} \Psi_{pref}) $$
+                    <br>
+                    $$ \tau = \begin{cases} 
+                    0.75, & \text{if } 115^\circ < h < 138^\circ \land L \le 45 \\ 
+                    0.80, & \text{if } 70^\circ \le h \le 115^\circ \land 45 < L \le 75 \\ 
+                    0.85, & \text{if } 70^\circ \le h \le 115^\circ \land L > 75 \\ 
+                    1, & \text{otherwise} 
+                    \end{cases} $$
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
     <div class="card">
         <h2>Interface Colorgorical</h2>
         <div class="controls">
@@ -30,6 +97,15 @@
                 <label>Número de Cores: <span id="vN">5</span></label>
                 <input type="range" id="n" min="2" max="15" value="5">
             </div>
+            
+            <div class="group">
+                <label>Cor Semente (Opcional):</label>
+                <div class="seed-input-group">
+                    <input type="checkbox" id="useSeed" title="Ativar cor inicial personalizada">
+                    <input type="color" id="seedColor" value="#2563eb" disabled>
+                </div>
+            </div>
+
             <div class="group">
                 <label>Peso Distância ($w_{dist}$): <span id="vD">50</span>%</label>
                 <input type="range" id="wDist" min="0" max="100" value="50">
@@ -45,28 +121,17 @@
         <canvas id="paletteCanvas" width="600" height="80"></canvas>
     </div>
 
-    <div class="card">
-        <h2>Processo: Adicionar à Paleta (Step 3)</h2>
-        
-        <div class="explanation-box">
-            <p>Para adicionar uma nova cor, o modelo calcula as pontuações para todas as cores restantes usando uma soma ponderada. Esta função soma cada uma das pontuações mínimas da paleta com pesos definidos pelo utilizador, dadas todas as pontuações possíveis entre uma potencial nova cor ($c$) e as cores já escolhidas ($P$).</p>
-            <p>O modelo utiliza pontuações mínimas assumindo que uma paleta é apenas tão distinguível ou preferível quanto a sua pontuação mais baixa.</p>
-            <p>Existe também um termo de penalidade dependente do matiz ($\tau$) para reduzir a probabilidade de amostragem de uma cor que faça fronteira com a região amarela escura. A nova cor é então amostrada aleatoriamente de cores que caem acima de um limiar de pontuação ($Threshold$). Cores não distinguíveis são removidas após a amostragem.</p>
-        </div>
-
-        <div class="math">
-            $$ score(c,P) = \tau \cdot (w_{dist} \cdot \min_{p \in P} \Psi_{dist} + w_{pref} \cdot \min_{p \in P} \Psi_{pref}) $$
-            <br>
-            $$ \tau = \begin{cases} 
-            0.75, & \text{if } 115^\circ < h < 138^\circ \land L \le 45 \\ 
-            0.80, & \text{if } 70^\circ \le h \le 115^\circ \land 45 < L \le 75 \\ 
-            0.85, & \text{if } 70^\circ \le h \le 115^\circ \land L > 75 \\ 
-            1, & \text{otherwise} 
-            \end{cases} $$
-        </div>
-
+    <div class="card log-card">
         <h3>Log de Execução Iterativa</h3>
         <div id="log">Aguardando início...</div>
+    </div>
+
+    <div class="card full-width">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 20px;">
+            <h2 style="border: none; padding: 0; margin: 0;">Aplicação: Streamgraph Transitions</h2>
+            <button id="transitionDataBtn" style="width: auto;">Transição de Dados (Mesma Paleta)</button>
+        </div>
+        <div id="d3-container" style="width: 100%; height: 500px; overflow: hidden; border-radius: 8px;"></div>
     </div>
 </div>
 

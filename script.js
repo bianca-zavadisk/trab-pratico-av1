@@ -87,6 +87,11 @@ function evaluate(cand, palette, wDist, wPref) {
     return { s: finalScore, tau, minDist, minPref, rawScore };
 }
 
+function hexToRgb(hex) {
+    const bigint = parseInt(hex.slice(1), 16);
+    return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+}
+
 // --- PIPELINE DE AMOSTRAGEM E UI ---
 async function run() {
     const logEl = document.getElementById('log');
@@ -171,18 +176,40 @@ async function run() {
         }
     };
 
-    const seedIdx = Math.floor(Math.random() * space.length);
-    const seed = space[seedIdx];
-    palette.push(seed);
-    space.splice(seedIdx, 1);
-    space = removeIndiscriminable(space, seed.lab);
+    const useSeed = document.getElementById('useSeed').checked;
+    
+    if (useSeed) {
+        // Se o utilizador forneceu a cor semente
+        const hex = document.getElementById('seedColor').value;
+        const rgb = hexToRgb(hex);
+        const lab = rgbToLab(rgb.r, rgb.g, rgb.b);
+        const seed = { r: rgb.r, g: rgb.g, b: rgb.b, lab: lab };
+        
+        palette.push(seed);
+        space = removeIndiscriminable(space, seed.lab);
 
-    updateUI();
-    logEl.innerHTML += `<div class="log-item">
-        <span class="log-hl">Step 2: Start Palette</span><br>
-        Cor semente (C1) escolhida aleatoriamente.<br>
-        Espaço CIELAB filtrado p/ ${space.length} cores distinguíveis restantes.
-    </div>`;
+        updateUI();
+        logEl.innerHTML += `<div class="log-item">
+            <span class="log-hl">Step 2: Start Palette</span><br>
+            Cor semente personalizada (<strong>${hex.toUpperCase()}</strong>) introduzida pelo utilizador.<br>
+            Espaço CIELAB filtrado p/ ${space.length} cores distinguíveis restantes.
+        </div>`;
+    } else {
+        // Fallback: Semente Aleatória
+        const seedIdx = Math.floor(Math.random() * space.length);
+        const seed = space[seedIdx];
+        palette.push(seed);
+        space.splice(seedIdx, 1);
+        space = removeIndiscriminable(space, seed.lab);
+
+        updateUI();
+        logEl.innerHTML += `<div class="log-item">
+            <span class="log-hl">Step 2: Start Palette</span><br>
+            Cor semente (C1) escolhida aleatoriamente.<br>
+            Espaço CIELAB filtrado p/ ${space.length} cores distinguíveis restantes.
+        </div>`;
+    }
+    
     await sleep(600);
 
     while (palette.length < N && space.length > 0) {
@@ -242,6 +269,11 @@ async function run() {
     if(palette.length < N) {
         logEl.innerHTML += `<div class="log-item" style="color:#ef4444; font-weight:bold;">Aviso: Espaço de cores esgotado antes do alvo.</div>`;
     }
+
+    const hexColors = palette.map(c => '#' + [c.r, c.g, c.b].map(x => x.toString(16).padStart(2, '0')).join(''));
+    if (window.renderStreamgraph) {
+        window.renderStreamgraph(hexColors);
+    }
     
     btn.disabled = false;
 }
@@ -250,4 +282,7 @@ async function run() {
 document.getElementById('n').addEventListener('input', e => document.getElementById('vN').innerText = e.target.value);
 document.getElementById('wDist').addEventListener('input', e => document.getElementById('vD').innerText = e.target.value);
 document.getElementById('wPref').addEventListener('input', e => document.getElementById('vP').innerText = e.target.value);
+document.getElementById('useSeed').addEventListener('change', e => {
+    document.getElementById('seedColor').disabled = !e.target.checked;
+});
 document.getElementById('runBtn').addEventListener('click', run);
