@@ -1,4 +1,4 @@
-// Implementação adaptada do Streamgraph Transitions (ObservableHQ)
+// Implementação adaptada do Streamgraph Transitions (ObservableHQ) para Vanilla JS
 
 // --- Funções Matemáticas Geradoras de Dados (Bumps) ---
 function bump(a, n) {
@@ -18,27 +18,25 @@ function bumps(n, m) {
     return a;
 }
 
-// Retorna uma matriz de dados onde cada array é uma camada (layer)
 function randomizeData(numLayers, samplesPerLayer) {
     return Array.from({length: numLayers}, () => bumps(samplesPerLayer, 10));
 }
 
 // --- Configuração D3 ---
-let svg, path, x, y, area;
-const m = 200; // Resolução horizontal (pontos por camada)
+let svg, x, y, area;
+const m = 200; 
 let currentData = [];
 let currentPalette = [];
+let isLooping = false;
 
 function initD3() {
     const container = document.getElementById("d3-container");
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    // Escalas base
     x = d3.scaleLinear([0, m - 1], [0, width]);
-    y = d3.scaleLinear([0, 1], [height, 0]); // O domínio y é atualizado dinamicamente
+    y = d3.scaleLinear([0, 1], [height, 0]);
 
-    // Gerador de área com curva suavizada
     area = d3.area()
         .x((d, i) => x(i))
         .y0(d => y(d[0]))
@@ -48,87 +46,80 @@ function initD3() {
     svg = d3.select("#d3-container").append("svg")
         .attr("viewBox", [0, 0, width, height])
         .attr("width", width)
-        .attr("height", height)
-        .attr("style", "max-width: 100%; height: auto; display: block;");
+        .attr("height", height);
         
-    // Botão para forçar uma transição manual das formas mantendo a paleta atual
-    document.getElementById('transitionDataBtn').addEventListener('click', () => {
-        if(currentPalette.length > 0) {
-            transitionShapes();
-        }
-    });
+    if (!isLooping) {
+        isLooping = true;
+        autoTransitionLoop();
+    }
 }
 
-// Função chamada pelo Colorgorical quando a paleta está pronta
 window.renderStreamgraph = function(hexPalette) {
     if (!svg) initD3();
-    
     currentPalette = hexPalette;
-    const n = hexPalette.length; // Quantidade de camadas igual ao número de cores geradas
+    const n = hexPalette.length; // Dinâmico: número de cores selecionadas
     
-    // Gerar nova matriz de dados com base na quantidade de cores
     currentData = randomizeData(n, m);
-    
-    // Criar a pilha de camadas (Stack) usando offset "wiggle" para o formato Streamgraph
-    const stack = d3.stack()
-        .keys(d3.range(n))
-        .offset(d3.stackOffsetWiggle)
-        .order(d3.stackOrderNone);
-        
+    const stack = d3.stack().keys(d3.range(n)).offset(d3.stackOffsetWiggle);
     const layers = stack(d3.transpose(currentData));
 
-    // Atualizar o domínio Y para enquadrar os novos picos
-    y.domain([
-        d3.min(layers, l => d3.min(l, d => d[0])),
-        d3.max(layers, l => d3.max(l, d => d[1]))
-    ]);
+    y.domain([d3.min(layers, l => d3.min(l, d => d[0])), d3.max(layers, l => d3.max(l, d => d[1]))]);
 
-    // Escala de cores atrelada à nossa nova paleta gerada
-    const colorScale = d3.scaleOrdinal()
-        .domain(d3.range(n))
-        .range(currentPalette);
+    const colorScale = d3.scaleOrdinal().domain(d3.range(n)).range(currentPalette);
 
-    // Selecionar caminhos existentes (paths)
-    path = svg.selectAll("path")
-        .data(layers);
-
-    // Join (Enter + Update + Exit)
-    path.join(
-        enter => enter.append("path")
-            .attr("d", area)
-            .attr("fill", (d, i) => colorScale(i))
-            .style("opacity", 0) // Fade in para novas camadas
-            .call(enter => enter.transition().duration(750).style("opacity", 1)),
-        update => update
-            .call(update => update.transition().duration(1500)
-                .attr("d", area)
-                .attr("fill", (d, i) => colorScale(i))),
-        exit => exit
-            .call(exit => exit.transition().duration(750)
-                .style("opacity", 0).remove())
-    );
-};
-
-// Anima os dados mantendo as cores atuais
-function transitionShapes() {
-    const n = currentPalette.length;
-    currentData = randomizeData(n, m);
-    
-    const stack = d3.stack()
-        .keys(d3.range(n))
-        .offset(d3.stackOffsetWiggle)
-        .order(d3.stackOrderNone);
-        
-    const layers = stack(d3.transpose(currentData));
-
-    y.domain([
-        d3.min(layers, l => d3.min(l, d => d[0])),
-        d3.max(layers, l => d3.max(l, d => d[1]))
-    ]);
-
+    // O .join cuida de adicionar ou remover camadas conforme o N muda
     svg.selectAll("path")
         .data(layers)
-        .transition()
-        .duration(1500)
-        .attr("d", area);
+        .join(
+            enter => enter.append("path")
+                .attr("d", area)
+                .attr("fill", (d, i) => colorScale(i))
+                .style("opacity", 0)
+                .call(e => e.transition().duration(750).style("opacity", 1)),
+            update => update.transition().duration(1000)
+                .attr("d", area)
+                .attr("fill", (d, i) => colorScale(i)),
+            exit => exit.transition().duration(500).style("opacity", 0).remove()
+        );
+};
+
+// --- Loop Automático Infinito ---
+async function autoTransitionLoop() {
+    while (true) {
+        // Aguarda 1 segundo antes de preparar a próxima transição
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Só avança se o gráfico já tiver sido inicializado e possuir uma paleta
+        if (currentPalette.length > 0 && svg) {
+            const n = currentPalette.length;
+            currentData = randomizeData(n, m);
+            
+            const stack = d3.stack()
+                .keys(d3.range(n))
+                .offset(d3.stackOffsetWiggle)
+                .order(d3.stackOrderNone);
+                
+            const layers = stack(d3.transpose(currentData));
+
+            // Atualiza dinamicamente o domínio Y para enquadrar os novos picos
+            y.domain([
+                d3.min(layers, l => d3.min(l, d => d[0])),
+                d3.max(layers, l => d3.max(l, d => d[1]))
+            ]);
+
+            try {
+                // A instrução .end() resolve a Promise quando a animação de 1500ms termina.
+                // Se for interrompida por um renderStreamgraph manual, gera um erro que é apanhado abaixo.
+                await svg.selectAll("path")
+                    .data(layers)
+                    .transition()
+                    .duration(1500)
+                    .attr("d", area)
+                    .end();
+            } catch (error) {
+                // Animação foi interrompida de propósito (o utilizador alterou os parâmetros).
+                // Ignoramos a falha e permitimos que o while(true) continue o seu ciclo limpo.
+            }
+        }
+    }
 }

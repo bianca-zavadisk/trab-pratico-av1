@@ -261,7 +261,10 @@ async function run() {
             });
         }
 
-        logEl.scrollTop = logEl.scrollHeight;
+        logEl.scrollTo({
+            top: logEl.scrollHeight,
+            behavior: 'smooth'
+        });
         
         await sleep(800);
     }
@@ -274,6 +277,9 @@ async function run() {
     if (window.renderStreamgraph) {
         window.renderStreamgraph(hexColors);
     }
+
+    if (window.renderScatterplot) window.renderScatterplot(hexColors);
+    if (window.renderBarplot) window.renderBarplot(hexColors);
     
     btn.disabled = false;
 }

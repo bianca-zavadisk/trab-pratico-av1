@@ -24,7 +24,55 @@
 <body>
 
 <div class="grid">
+
+    <div class="full-width">
+        <h2 style="margin-bottom: 20px;">Funções de Pontuação (Scoring Functions)</h2>
+        
+        <div class="metrics-grid">
+            <div class="card">
+                <h3>CIEDE2000: Distância Perceptual</h3>
+                <div class="explanation-box">
+                    <p>Utilizada para medir a diferença visual entre duas cores. Diferente da distância Euclidiana simples ($\Delta E_{76}$), a norma $DE00$ aplica correções para luminosidade, croma e matiz, além de um termo de rotação ($R_T$) para melhorar a uniformidade perceptiva.</p>
+                </div>
+                <div class="math small-math">
+                    $$ \Delta E_{00} = \sqrt{\left(\frac{\Delta L'}{S_L}\right)^2 + \left(\frac{\Delta C'}{S_C}\right)^2 + \left(\frac{\Delta H'}{S_H}\right)^2 + R_T \frac{\Delta C'}{S_C} \frac{\Delta H'}{S_H}} $$
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Name Difference (ND)</h3>
+                <div class="explanation-box">
+                    <p>Mede a probabilidade de duas cores serem confundidas linguisticamente. Utiliza a distância de Hellinger sobre distribuições de associação entre cores e nomes populares (ex: "azul claro" vs "turquesa").</p>
+                </div>
+                <div class="math small-math">
+                    $$ ND(c_1, c_2) = \sqrt{1 - \sum_{w \in W} \sqrt{p(w|c_1)p(w|c_2)}} $$
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Name Uniqueness (NU)</h3>
+                <div class="explanation-box">
+                    <p>Indica o quão "único" é o nome de uma cor. Cores com nomes focais e bem definidos pontuam baixo, enquanto cores com nomes ambíguos ou distribuídos pontuam alto (entropia negativa).</p>
+                </div>
+                <div class="math small-math">
+                    $$ NU(c) = \sum_{w \in W} p(w|c) \log p(w|c) $$
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Pair Preference (PP)</h3>
+                <div class="explanation-box">
+                    <p>Modelo de preferência estética baseado em regressão linear. Recompensa pares que contenham cores "frias" ($\kappa$), alto contraste de luminosidade ($\Delta L$) e similaridade de matiz ($\Delta H$).</p>
+                </div>
+                <div class="math small-math">
+                    $$ PP(c_1, c_2) = 75.15(\kappa_1 + \kappa_2) + 47.61|\Delta L| - 46.42|\Delta H| $$
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="process-timeline full-width">
+        <h2 style="margin-bottom: 20px;">Pipeline</h2>
         
         <div class="step-card">
             <div class="step-indicator">
@@ -129,9 +177,31 @@
     <div class="card full-width">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 20px;">
             <h2 style="border: none; padding: 0; margin: 0;">Aplicação: Streamgraph Transitions</h2>
-            <button id="transitionDataBtn" style="width: auto;">Transição de Dados (Mesma Paleta)</button>
         </div>
         <div id="d3-container" style="width: 100%; height: 500px; overflow: hidden; border-radius: 8px;"></div>
+    </div>
+
+    <script defer src="scatterplot.js"></script>
+    <script defer src="barplot.js"></script>
+
+    <div class="card full-width">
+        <h2 style="border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 20px;">
+            Aplicações: Distribuição e Frequência
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+            
+            <div>
+                <h3 style="margin-top: 0; color: #475569; font-size: 1.05rem;">D3 Scatter Plot (Clusters)</h3>
+                <div id="scatter-container" style="width: 100%; height: 380px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid var(--border);"></div>
+            </div>
+
+            <div>
+                <h3 style="margin-top: 0; color: #475569; font-size: 1.05rem;">D3 Bar Plot (Categorias)</h3>
+                <div id="bar-container" style="width: 100%; height: 380px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid var(--border);"></div>
+            </div>
+            
+        </div>
     </div>
 </div>
 
