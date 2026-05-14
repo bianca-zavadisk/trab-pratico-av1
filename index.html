@@ -21,11 +21,6 @@
     <link rel="stylesheet" href="assets/css/controls.css">
     <link rel="stylesheet" href="assets/css/tooltip.css">
     <link rel="stylesheet" href="assets/css/log.css">
-    
-    <script src="assets/js/script.js"></script>
-    <script defer src="assets/js/streamgraph.js"></script>
-    <script defer src="assets/js/scatterplot.js"></script>
-    <script defer src="assets/js/barplot.js"></script>
 </head>
 <body>
 
@@ -114,10 +109,10 @@
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 15px;">
-                <h3 style="margin-top: 0; color: var(--primary);">A Necessidade da Conversão</h3>
+                <h3 style="margin-top: 0; color: var(--primary);">Por que precisamos converter?</h3>
                 <div class="explanation-box" style="flex-grow: 1;">
-                    <p>O espaço sRGB nativo dos ecrãs é dependente do dispositivo e geometricamente distorcido. A distância matemática entre dois códigos RGB não reflete a verdadeira distância visual humana.</p>
-                    <p>O algoritmo converte primeiro as cores geradas para CIELAB para garantir que o cálculo de contraste ($\Delta E_{00}$) represente a percepção humana real. Espaços como o CMYK (impressão) ou RGB (ecrãs) são subconjuntos limitados (gamas menores) em comparação com o LAB, que modela teoricamente toda a visão humana.</p>
+                    <p>O espaço sRGB nativo é dependente do dispositivo e geometricamente distorcido. A distância matemática entre dois códigos RGB não reflete a verdadeira distância visual humana.</p>
+                    <p>Já que espaços como o CMYK ou RGB são subconjuntos limitados (gamas menores) em comparação com o LAB, o algoritmo converte primeiro as cores geradas para CIELAB para garantir que o cálculo de contraste ($\Delta E_{00}$) represente a percepção humana real.</p>
                 </div>
                 <img src="assets/img/rgb-lab-cmyk.png" alt="Comparação de gamut RGB, CMYK e LAB" style="max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 0 auto; width: 20vw;">
             </div>
@@ -291,6 +286,11 @@
         </div>
     </div>
 </div>
+
+    <script src="assets/scripts/script.js"></script>
+    <script src="assets/scripts/streamgraph.js"></script>
+    <script src="assets/scripts/scatterplot.js"></script>
+    <script src="assets/scripts/barplot.js"></script>
 
 </body>
 </html>
