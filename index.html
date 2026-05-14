@@ -153,9 +153,9 @@
             <div class="step-content">
                 <h2>Inicialização do CIELAB</h2>
                 <div class="explanation-box">
-                    <p>A inicialização carrega o espaço de cores CIELAB. Para garantir que a ferramenta seja rápida e interativa, o algoritmo utiliza uma amostragem inicial mais espaçada, evitando o processamento excessivo ao pré-calcular as preferências de pares.</p>
+                    <p>A inicialização carrega o espaço de cores CIELAB. Para garantir que a ferramenta seja rápida, o algoritmo utiliza uma amostragem inicial mais espaçada ao carregar um subespaço do CIELAB, evitando o processamento excessivo ao pré-calcular as preferências de pares (PPs).</p>
                     <p>O modelo restringe os candidatos às cores altamente preferíveis usando um limiar estatístico baseado no desvio padrão ($SD$), removendo opções com pontuações muito baixas.</p>
-                    <p>Por fim, estabelece-se a regra de diferença perceptível de Stone et al.: para as cores serem distinguíveis, a distância entre elas deve superar valores específicos em pelo menos um dos três eixos CIELAB.</p>
+                    <p>Por fim, estabelece-se a regra de diferença perceptível: para as cores serem distinguíveis, a distância entre elas deve superar valores específicos em pelo menos um dos três eixos CIELAB.</p>
                 </div>
                 <div class="math">
                     $$ threshold(c) = \Phi_c > \max(\Phi) - 0.75 \cdot SD(\Phi) $$
@@ -174,8 +174,8 @@
                 <h2>Iniciar Paleta</h2>
                 <div class="explanation-box">
                     <p>A primeira cor da paleta é selecionada ao sortear aleatoriamente uma "semente" a partir do subconjunto de cores que sobreviveram aos filtros da inicialização.</p>
-                    <p>Caso o utilizador forneça a sua própria cor inicial explicitamente, a etapa de sorteio é ignorada e essa cor torna-se o ponto de partida absoluto.</p>
-                    <p>Após a definição da primeira cor ($P_1$), o algoritmo varre o espaço disponível e elimina todas as cores vizinhas consideradas indistinguíveis em relação à semente.</p>
+                    <p>Caso o utilizador forneça a sua própria cor inicial (seed) explicitamente, a etapa de sorteio é ignorada e essa cor torna-se o ponto de partida absoluto.</p>
+                    <p>Após a definição da primeira cor ($P_1$), o algoritmo varre o espaço disponível e elimina todas as cores vizinhas consideradas indistinguíveis em relação à semente, usando o filtro especificado no passo anterior.</p>
                 </div>
                 <div class="math">
                     $$ P_1 = \begin{cases} seed_{user}, & \text{se fornecida} \\ c \sim \mathcal{U}(C_{threshold}), & \text{sorteio aleatório} \end{cases} $$
@@ -190,9 +190,9 @@
             <div class="step-content">
                 <h2>Adicionar à Paleta</h2>
                 <div class="explanation-box">
-                    <p>Para adicionar uma nova cor, o algoritmo avalia os candidatos calculando a sua pontuação mínima com as cores já presentes na paleta, com base nos pesos definidos pelo usuário.</p>
-                    <p>Após aplicar uma penalização para evitar tons amarelo-escuros, a nova cor é sorteada aleatoriamente entre as opções com melhor pontuação (acima de um limiar).</p>
-                    <p>Por fim, as opções muito semelhantes à cor escolhida são descartadas para manter o contraste visual.</p>
+                    <p>Para adicionar uma nova cor, o algoritmo avalia os candidatos calculando a sua pontuação (score) mínima com as cores já presentes na paleta, com base nos pesos definidos pelo usuário, $w_{dist}$ e $w_{pref}$.</p>
+                    <p>Após aplicar uma penalização ($\tau$) para evitar tons amarelo-escuros, a nova cor é sorteada aleatoriamente entre as opções com melhor pontuação (acima de um limiar).</p>
+                    <p>Por fim, as opções muito semelhantes à nova cor escolhida são descartadas para manter o contraste visual.</p>
                 </div>
                 <div class="math">
                     $$ score(c,P) = \tau \cdot (w_{dist} \cdot \min_{p \in P} \Psi_{dist} + w_{pref} \cdot \min_{p \in P} \Psi_{pref}) $$
