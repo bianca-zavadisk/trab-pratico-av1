@@ -1,0 +1,25 @@
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 colunas */
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.metrics-grid .card {
+    min-height: 250px; /* Garante uniformidade visual */
+    justify-content: space-between;
+}
+
+.metrics-grid h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    color: var(--primary);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+}
+
+@media (max-width: 800px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+}

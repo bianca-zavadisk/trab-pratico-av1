@@ -1,0 +1,38 @@
+.log-card {
+    height: 94.5%;
+}
+
+.log-card h3 {
+    margin-top: 0;
+}
+
+#log { 
+    flex-grow: 1; 
+    background: #1e293b; 
+    color: #e2e8f0; 
+    padding: 15px; 
+    border-radius: 8px; 
+    font-family: 'Consolas', monospace; 
+    font-size: 0.8rem; 
+    overflow-y: auto;
+    
+    height: 10px; 
+    min-height: 500px; 
+}
+
+.log-item { 
+    margin-bottom: 12px; 
+    padding-bottom: 12px; 
+    border-bottom: 1px dashed #334155; 
+}
+
+.log-item:last-child { 
+    border-bottom: none; 
+    margin-bottom: 0; 
+    padding-bottom: 0; 
+}
+
+.log-hl { 
+    color: #9d5cff; 
+    font-weight: bold; 
+}
