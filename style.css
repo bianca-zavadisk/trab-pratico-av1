@@ -16,6 +16,11 @@ body {
     line-height: 1.5; 
 }
 
+.imp-img {
+    margin-top: 2rem;
+    width: 50vw;
+}
+
 .grid { 
     display: grid; 
     grid-template-columns: 1fr 500px; 
@@ -54,13 +59,19 @@ h2 {
     border-bottom: 2px solid var(--bg); 
     padding-bottom: 10px; 
     margin-bottom: 15px; 
+
+    font-weight: 900;
+    color: var(--primary);
 }
 
 h3 { 
-    font-size: 1rem; 
+    font-size: 1.2rem; 
     color: #334155; 
     margin-bottom: 10px; 
     margin-top: 20px; 
+
+    font-weight: 900;
+    color: var(--primary);
 }
 
 .controls { 
@@ -280,4 +291,76 @@ canvas {
     .metrics-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* --- ESTILOS DOS TOOLTIPS --- */
+
+.info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    background-color: var(--border);
+    color: var(--text);
+    font-size: 10px;
+    font-weight: bold;
+    border-radius: 50%;
+    margin-left: 5px;
+    cursor: help;
+    position: relative;
+    vertical-align: middle;
+    transition: background-color 0.2s;
+}
+
+.info-icon:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+/* A caixinha explicativa */
+.info-icon::after {
+    content: attr(data-tooltip); /* Pega o texto do atributo HTML */
+    position: absolute;
+    bottom: 125%; /* Aparece acima do ícone */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1e293b; /* Mesma cor do log para consistência */
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: normal;
+    white-space: normal; /* Permite quebra de linha */
+    width: 180px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    z-index: 100;
+    pointer-events: none; /* Não atrapalha o mouse */
+    line-height: 1.2;
+}
+
+/* A setinha da caixinha */
+.info-icon::before {
+    content: "";
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: #1e293b transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    z-index: 100;
+}
+
+/* Mostrar ao passar o mouse */
+.info-icon:hover::after,
+.info-icon:hover::before {
+    opacity: 1;
+    visibility: visible;
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colorgorical & D3.js</title>
+    <title>Colorgorical</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,8 +25,25 @@
 
 <div class="grid">
 
+    <div class="card">
+        <h2>Problemática</h2>
+        <p>Na área de visualização de dados categóricos é necessário que a paleta de cores, além de esteticamente agradável, seja altamente discriminável, isto é, que as cores sejam facilmente distinguíveis entre si.</p>
+        <p>Encontrar esse balanço entre estética e discriminabilidade é um desafio, já que essas métricas podem ser inversamente proporcionais.</p>
+
+        <h2>Implementação</h2>
+        Com base no artigo de Gramazio, C., Laidlaw, D. e Schloss, K., foi feita uma implementação em HTML canvas e JavaScript do algoritmo do Colorgorical, ilustrando o passo a passo do caminho no espaço de cores CIELAB, considerando as métricas de score de cores. Por simplicidade, foram implementadas apenas as métricas de distância perceptual e pair preference.
+        <img src="assets/img/js-implementation.png" alt="#" class="imp-img">
+    </div>
+
+    <div class="card">
+        <h2>Colorgorical</h2>
+        <p>Esse trade-off é trabalhado na plataforma Cologorical e avaliado no artigo <i>Colorgorical: Creating discriminable and preferable color palettes for information visualization</i>. Uma paleta de cores é construída com base em funções de score para cores, descritas a seguir.</p>
+        <img src="assets/img/Colorgorical.png" alt="#">
+        <img src="assets/img/Colorgorical-paper.png" alt="#">
+    </div>
+
     <div class="full-width">
-        <h2 style="margin-bottom: 20px;">Funções de Pontuação (Scoring Functions)</h2>
+        <h2 style="margin: 20px 0;">Funções de Pontuação (Scoring Functions)</h2>
         
         <div class="metrics-grid">
             <div class="card">
@@ -71,6 +88,59 @@
         </div>
     </div>
 
+    <div class="card full-width" style="margin-bottom: 40px;">
+        <h2>Espaço de Cores CIELAB e Conversão RGB</h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 25px; margin-bottom: 30px;">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <h3 style="margin-top: 0; color: var(--primary);">O que é o espaço CIELAB?</h3>
+                <div class="explanation-box" style="flex-grow: 1;">
+                    <p>O CIELAB (ou $L^*a^*b^*$) é um espaço de cores projetado para ser <strong>perceptualmente uniforme</strong>. Ao contrário do RGB, uma alteração numérica de "10 unidades" no CIELAB corresponde à mesma magnitude de alteração visual percebida pelo olho humano, independentemente da cor.</p>
+                    <p>Ele é estruturado em três eixos tridimensionais:</p>
+                    <ul style="margin-bottom: 0;">
+                        <li><strong>$L^*$ (Luminosidade):</strong> Varia de 0 (preto absoluto) a 100 (branco puro).</li>
+                        <li><strong>$a^*$ (Verde-Vermelho):</strong> Valores negativos indicam tons de verde, positivos indicam vermelho.</li>
+                        <li><strong>$b^*$ (Azul-Amarelo):</strong> Valores negativos indicam tons de azul, positivos indicam amarelo.</li>
+                    </ul>
+                    <img src="assets/img/CIELAB_color_space_top_view.png" alt="Diagrama 3D do espaço de cores CIELAB" style="max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 1rem auto; width: 20vw;">
+                </div>
+
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <h3 style="margin-top: 0; color: var(--primary);">A Necessidade da Conversão</h3>
+                <div class="explanation-box" style="flex-grow: 1;">
+                    <p>O espaço sRGB nativo dos ecrãs é dependente do dispositivo e geometricamente distorcido. A distância matemática entre dois códigos RGB não reflete a verdadeira distância visual humana.</p>
+                    <p>O algoritmo converte primeiro as cores geradas para CIELAB para garantir que o cálculo de contraste ($\Delta E_{00}$) represente a percepção humana real. Espaços como o CMYK (impressão) ou RGB (ecrãs) são subconjuntos limitados (gamas menores) em comparação com o LAB, que modela teoricamente toda a visão humana.</p>
+                </div>
+                <img src="assets/img/rgb-lab-cmyk.png" alt="Comparação de gamut RGB, CMYK e LAB" style="max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 0 auto; width: 20vw;">
+            </div>
+        </div>
+
+        <h3 style="margin-top: 0; color: var(--text);">Matemática da Conversão: sRGB $\rightarrow$ CIE XYZ $\rightarrow$ CIELAB</h3>
+        
+        <div class="math small-math" style="text-align: left; padding: 20px;">
+            <p style="margin-top: 0;"><strong>Passo 1: Expansão Gamma (Transformar sRGB em RGB Linear)</strong></p>
+            $$ C_{linear} = \begin{cases} \frac{C_{sRGB}}{12.92}, & \text{se } C_{sRGB} \le 0.04045 \\ \left(\frac{C_{sRGB} + 0.055}{1.055}\right)^{2.4}, & \text{se } C_{sRGB} > 0.04045 \end{cases} $$
+            <p style="font-size: 0.8rem; color: #64748b;">*Onde $C$ representa cada canal de cor ($R$, $G$ ou $B$) normalizado entre 0 e 1.</p>
+
+            <hr style="border: none; border-top: 1px dashed var(--border); margin: 20px 0;">
+
+            <p><strong>Passo 2: Conversão Linear RGB para CIE XYZ (Usando o Iluminante Padrão D65)</strong></p>
+            $$ \begin{bmatrix} X \\ Y \\ Z \end{bmatrix} = \begin{bmatrix} 0.4124 & 0.3576 & 0.1805 \\ 0.2126 & 0.7152 & 0.0722 \\ 0.0193 & 0.1192 & 0.9505 \end{bmatrix} \begin{bmatrix} R_{lin} \\ G_{lin} \\ B_{lin} \end{bmatrix} \times 100 $$
+
+            <hr style="border: none; border-top: 1px dashed var(--border); margin: 20px 0;">
+
+            <p><strong>Passo 3: Conversão CIE XYZ para CIELAB</strong></p>
+            $$ L^* = 116 \cdot f\left(\frac{Y}{Y_n}\right) - 16 $$
+            $$ a^* = 500 \cdot \left[ f\left(\frac{X}{X_n}\right) - f\left(\frac{Y}{Y_n}\right) \right] $$
+            $$ b^* = 200 \cdot \left[ f\left(\frac{Y}{Y_n}\right) - f\left(\frac{Z}{Z_n}\right) \right] $$
+            
+            <p style="margin-bottom: 5px;">A função de transformação não-linear $f(t)$ e os brancos de referência ($X_n, Y_n, Z_n$) são definidos como:</p>
+            $$ f(t) = \begin{cases} \sqrt[3]{t}, & \text{se } t > 0.008856 \\ 7.787 \cdot t + \frac{16}{116}, & \text{se } t \le 0.008856 \end{cases} $$
+        </div>
+    </div>
+
     <div class="process-timeline full-width">
         <h2 style="margin-bottom: 20px;">Pipeline</h2>
         
@@ -80,7 +150,7 @@
                 <div class="step-line"></div>
             </div>
             <div class="step-content">
-                <h2>Inicialização</h2>
+                <h2>Inicialização do CIELAB</h2>
                 <div class="explanation-box">
                     <p>A inicialização carrega o espaço de cores CIELAB. Para garantir que a ferramenta seja rápida e interativa, o algoritmo utiliza uma amostragem inicial mais espaçada, evitando o processamento excessivo ao pré-calcular as preferências de pares.</p>
                     <p>O modelo restringe os candidatos às cores altamente preferíveis usando um limiar estatístico baseado no desvio padrão ($SD$), removendo opções com pontuações muito baixas.</p>
@@ -142,12 +212,18 @@
         <h2>Interface Colorgorical</h2>
         <div class="controls">
             <div class="group">
-                <label>Número de Cores: <span id="vN">5</span></label>
+                <label>
+                    Número de Cores: <span id="vN">5</span>
+                    <span class="info-icon" data-tooltip="Define a quantidade total de cores na paleta final (N). O algoritmo rodará N-1 iterações após a semente.">i</span>
+                </label>
                 <input type="range" id="n" min="2" max="15" value="5">
             </div>
             
             <div class="group">
-                <label>Cor Semente (Opcional):</label>
+                <label>
+                    Cor Semente (Opcional):
+                    <span class="info-icon" data-tooltip="Força o algoritmo a iniciar a paleta (Step 2) com uma cor específica em vez de escolher uma aleatória.">i</span>
+                </label>
                 <div class="seed-input-group">
                     <input type="checkbox" id="useSeed" title="Ativar cor inicial personalizada">
                     <input type="color" id="seedColor" value="#2563eb" disabled>
@@ -155,16 +231,24 @@
             </div>
 
             <div class="group">
-                <label>Peso Distância ($w_{dist}$): <span id="vD">50</span>%</label>
+                <label>
+                    Peso Distância ($w_{dist}$): <span id="vD">50</span>%
+                    <span class="info-icon" data-tooltip="Ajusta a importância da discriminabilidade perceptiva (CIEDE2000). Valores altos priorizam cores fáceis de distinguir.">i</span>
+                </label>
                 <input type="range" id="wDist" min="0" max="100" value="50">
             </div>
+
             <div class="group">
-                <label>Peso Preferência ($w_{pref}$): <span id="vP">50</span>%</label>
+                <label>
+                    Peso Preferência ($w_{pref}$): <span id="vP">50</span>%
+                    <span class="info-icon" data-tooltip="Ajusta a importância estética (Pair Preference). Valores altos priorizam cores frias e combinações agradáveis.">i</span>
+                </label>
                 <input type="range" id="wPref" min="0" max="100" value="50">
             </div>
+
             <button id="runBtn">Gerar Paleta Iterativa</button>
         </div>
-        
+                
         <canvas id="spaceCanvas" width="600" height="350"></canvas>
         <canvas id="paletteCanvas" width="600" height="80"></canvas>
     </div>
@@ -176,7 +260,7 @@
 
     <div class="card full-width">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg); padding-bottom: 10px; margin-bottom: 20px;">
-            <h2 style="border: none; padding: 0; margin: 0;">Aplicação: Streamgraph Transitions</h2>
+            <h2 style="border: none; padding: 0; margin: 0;">Visualização com Streamgraph</h2>
         </div>
         <div id="d3-container" style="width: 100%; height: 500px; overflow: hidden; border-radius: 8px;"></div>
     </div>
@@ -192,12 +276,12 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
             
             <div>
-                <h3 style="margin-top: 0; color: #475569; font-size: 1.05rem;">D3 Scatter Plot (Clusters)</h3>
+                <h3 style="margin-top: 0; color: #475569; font-size: 1.05rem;">Scatter Plot (Clusters)</h3>
                 <div id="scatter-container" style="width: 100%; height: 380px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid var(--border);"></div>
             </div>
 
             <div>
-                <h3 style="margin-top: 0; color: #475569; font-size: 1.05rem;">D3 Bar Plot (Categorias)</h3>
+                <h3 style="margin-top: 0; color: #475569; font-size: 1.05rem;">Bar Plot (Categorias)</h3>
                 <div id="bar-container" style="width: 100%; height: 380px; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid var(--border);"></div>
             </div>
             

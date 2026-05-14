@@ -4,17 +4,23 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 function rgbToLab(r, g, b) {
     let r_ = r/255, g_ = g/255, b_ = b/255;
 
+    // Expansão gamma
     r_ = r_ > 0.04045 ? Math.pow((r_ + 0.055)/1.055, 2.4) : r_/12.92;
     g_ = g_ > 0.04045 ? Math.pow((g_ + 0.055)/1.055, 2.4) : g_/12.92;
     b_ = b_ > 0.04045 ? Math.pow((b_ + 0.055)/1.055, 2.4) : b_/12.92;
 
-    let x = (r_*0.4124 + g_*0.3576 + b_*0.1805)*100, y = (r_*0.2126 + g_*0.7152 + b_*0.0722)*100, z = (r_*0.0193 + g_*0.1192 + b_*0.9505)*100;
+    // Matriz de conversão linear para CIE XYZ
+    let x = (r_*0.4124 + g_*0.3576 + b_*0.1805)*100;
+    let y = (r_*0.2126 + g_*0.7152 + b_*0.0722)*100;
+    let z = (r_*0.0193 + g_*0.1192 + b_*0.9505)*100;
 
+    // Transformação não-linear
     x /= 95.047; y /= 100.000; z /= 108.883;
     x = x > 0.008856 ? Math.pow(x, 1/3) : (7.787*x) + (16/116);
     y = y > 0.008856 ? Math.pow(y, 1/3) : (7.787*y) + (16/116);
     z = z > 0.008856 ? Math.pow(z, 1/3) : (7.787*z) + (16/116);
 
+    // Conversão para CIE LAB
     let l = (116*y) - 16, a = 500*(x - y), b_l = 200*(y - z);
     let h = Math.atan2(b_l, a) * (180/Math.PI);
 
@@ -115,19 +121,16 @@ async function run() {
     const ctxP = canvasP.getContext('2d');
 
     const updateUI = () => {
-        // Pinta o fundo do canvas de preto sólido a cada frame
         ctxS.fillStyle = '#333';
         ctxS.fillRect(0,0,600,350);
         
         space.forEach(c => {
             const x = ((c.lab.a + 128)/256)*600, y = 350 - ((c.lab.b + 128)/256)*350;
-            // No fundo preto, uma opacidade maior (0.25) com rgb dá um efeito luminoso bonito
-            ctxS.fillStyle = `rgba(${c.r},${c.g},${c.b},0.25)`;
+            ctxS.fillStyle = `rgba(${c.r},${c.g},${c.b},0.85)`;
             ctxS.fillRect(x,y,2,2);
         });
         
         if(palette.length > 0) {
-            // Linhas brancas/cinza claro para contraste com o fundo preto
             ctxS.strokeStyle = "rgba(255, 255, 255, 0.7)";
             ctxS.lineWidth = 1.5;
             ctxS.beginPath();
@@ -142,7 +145,7 @@ async function run() {
                 const x = ((c.lab.a + 128)/256)*600, y = 350 - ((c.lab.b + 128)/256)*350;
                 
                 ctxS.fillStyle = `rgb(${c.r},${c.g},${c.b})`; 
-                ctxS.strokeStyle = "#ffffff"; // Contorno branco nos círculos
+                ctxS.strokeStyle = "#ffffff";
                 ctxS.lineWidth = 1.5;
                 ctxS.beginPath(); 
                 ctxS.arc(x, y, 7, 0, 2 * Math.PI);
@@ -164,7 +167,7 @@ async function run() {
                 ctxP.fillStyle = `rgb(${c.r},${c.g},${c.b})`; 
                 ctxP.fillRect(i*pw, 0, pw, 80);
                 
-                ctxP.fillStyle = c.lab.l > 50 ? "#000" : "#fff";
+                ctxP.fillStyle = c.lab.l > 50 ? "#333" : "#fff";
                 ctxP.font = "bold 13px monospace";
                 ctxP.textAlign = "center";
                 
@@ -249,7 +252,7 @@ async function run() {
 
         logEl.appendChild(item);
 
-        // Forçamos o KaTeX a renderizar apenas este novo elemento
+        // Força o KaTeX a renderizar apenas este novo elemento
         if (window.renderMathInElement) {
             renderMathInElement(item, {
                 delimiters: [
@@ -288,7 +291,5 @@ async function run() {
 document.getElementById('n').addEventListener('input', e => document.getElementById('vN').innerText = e.target.value);
 document.getElementById('wDist').addEventListener('input', e => document.getElementById('vD').innerText = e.target.value);
 document.getElementById('wPref').addEventListener('input', e => document.getElementById('vP').innerText = e.target.value);
-document.getElementById('useSeed').addEventListener('change', e => {
-    document.getElementById('seedColor').disabled = !e.target.checked;
-});
+document.getElementById('useSeed').addEventListener('change', e => document.getElementById('seedColor').disabled = !e.target.checked);
 document.getElementById('runBtn').addEventListener('click', run);
